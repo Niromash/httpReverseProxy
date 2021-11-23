@@ -23,6 +23,10 @@ func main() {
 		return
 	}
 
+	for _, host := range cfg.ProxyHost {
+		log.Printf("Redirect %s to %s", host.Hostname, host.RedirectTo)
+	}
+
 	getProxyHostFromHostname := func(hostname string) *config.ProxyHost {
 		for _, host := range cfg.ProxyHost {
 			if strings.EqualFold(host.Hostname, hostname) {

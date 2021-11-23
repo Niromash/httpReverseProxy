@@ -5,7 +5,7 @@ port = 80
 
 [[proxyHost]]
 hostname = "yourproject.com"
-redirectTo = "https://web_app:3000
+redirectTo = "http://web_app:3000"
 
 [[proxyHost]]
 hostname = "api.yourproject.com"
