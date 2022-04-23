@@ -52,10 +52,10 @@ func main() {
 			// log.Printf("Redirecting %s to %s", hostname, redirectTo)
 			r.Host = remote.Host
 			w.Header().Set("Cache-control", "no-cache")
-			if _, err = net.LookupIP(remote.Host); err != nil {
-				log.Println("Target cannot be resolved:", err.Error())
+			if _, err = net.LookupIP(remote.Hostname()); err != nil {
+				log.Println("Target cannot be reached:", err.Error())
 				w.WriteHeader(500)
-				_, _ = w.Write([]byte("Cannot resolve the target"))
+				_, _ = w.Write([]byte("Cannot reach the target"))
 				return
 			}
 			proxy.ServeHTTP(w, r)
