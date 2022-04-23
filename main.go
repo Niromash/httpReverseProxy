@@ -2,10 +2,13 @@ package main
 
 import (
 	"httpReverseProxy/config"
+	"io/ioutil"
 	"log"
+	"net"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
+	"os"
 	"strconv"
 	"strings"
 )
@@ -46,23 +49,39 @@ func main() {
 			}
 			proxy := httputil.NewSingleHostReverseProxy(remote)
 
-			//log.Printf("Redirecting %s to %s", hostname, redirectTo)
+			// log.Printf("Redirecting %s to %s", hostname, redirectTo)
 			r.Host = remote.Host
 			w.Header().Set("Cache-control", "no-cache")
+			if _, err = net.LookupIP(remote.Host); err != nil {
+				log.Println("Target cannot be resolved:", err.Error())
+				w.WriteHeader(500)
+				_, _ = w.Write([]byte("Cannot resolve the target"))
+				return
+			}
 			proxy.ServeHTTP(w, r)
 		} else {
 			w.WriteHeader(404)
-			_, err := w.Write([]byte("You entered an invalid hostname!"))
+			if cfg.Preferences.UseIndexFileWhenHostnameNotFound {
+				indexFile, err := os.OpenFile("./"+cfg.Preferences.IndexFilePath, os.O_RDONLY, 777)
+				if err == nil {
+					indexFileContent, err := ioutil.ReadAll(indexFile)
+					if err == nil {
+						_, err = w.Write(indexFileContent)
+						return
+					}
+				}
+				log.Println("Unable to send file when hostname not found: ", err)
+				return
+			}
+			_, err := w.Write([]byte(cfg.Preferences.HostnameNotFoundMessage))
 			if err != nil {
-				w.WriteHeader(500)
-				_, _ = w.Write([]byte("Internal error"))
-				log.Println(err)
+				log.Println("Unable to send message when hostname not found")
 				return
 			}
 		}
 	})
 
-	err = http.ListenAndServe(":" + strconv.Itoa(cfg.HttpServerOptions.Port), nil)
+	err = http.ListenAndServe(":"+strconv.Itoa(cfg.HttpServerOptions.Port), nil)
 	if err != nil {
 		panic(err)
 	}
