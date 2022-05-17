@@ -1,0 +1,17 @@
+[httpServer]
+port = 5500
+
+[preferences]
+useIndexFileWhenHostnameNotFound = true
+# Only if useIndexFileWhenHostnameNotFound is set to true
+indexFilePath = "index.html" # Only html files accepted
+# Only if useIndexFileWhenHostnameNotFound is set to false false
+hostnameNotFoundMessage = "Web app linked to the hostname you provided does not exist!"
+
+[[proxyHost]]
+hostname = "localhost"
+redirectTo = "https://emeralds-hub.com"
+
+[[proxyHost]]
+hostname = "test"
+redirectTo = "https://bastionmc.fr"
