@@ -15,15 +15,30 @@ import (
 
 func main() {
 
-	cfgRaw, err := config.HandleConfigFile()
-	if err != nil {
-		return
-	}
+	// cfgRaw, err := config.HandleConfigFile()
+	// if err != nil {
+	// 	return
+	// }
+	//
+	// cfg, err := config.Decode(cfgRaw)
+	// if err != nil {
+	// 	log.Fatalln("Unable to parse config file: ", err)
+	// 	return
+	// }
 
-	cfg, err := config.Decode(cfgRaw)
-	if err != nil {
-		log.Fatalln("Unable to parse config file: ", err)
-		return
+	atoi, _ := strconv.Atoi(os.Getenv("PORT"))
+	cfg := config.Config{
+		HttpServerOptions: config.HttpServerOptions{
+			Port: atoi,
+		},
+		Preferences: config.Preferences{
+			UseIndexFileWhenHostnameNotFound: false,
+			IndexFilePath:                    "index.html",
+			HostnameNotFoundMessage:          "Web app linked to the hostname you provided does not exist!",
+		},
+		ProxyHost: []config.ProxyHost{
+			{Hostname: "datasource.niromash.me", RedirectTo: "85.10.204.125"},
+		},
 	}
 
 	for _, host := range cfg.ProxyHost {
@@ -81,7 +96,7 @@ func main() {
 		}
 	})
 
-	err = http.ListenAndServe(":"+strconv.Itoa(cfg.HttpServerOptions.Port), nil)
+	err := http.ListenAndServe(":"+strconv.Itoa(cfg.HttpServerOptions.Port), nil)
 	if err != nil {
 		panic(err)
 	}
