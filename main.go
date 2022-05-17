@@ -15,6 +15,7 @@ import (
 
 func main() {
 
+	// Normal
 	// cfgRaw, err := config.HandleConfigFile()
 	// if err != nil {
 	// 	return
@@ -26,6 +27,7 @@ func main() {
 	// 	return
 	// }
 
+	// Using Heroku
 	atoi, _ := strconv.Atoi(os.Getenv("PORT"))
 	cfg := config.Config{
 		HttpServerOptions: config.HttpServerOptions{
@@ -37,7 +39,9 @@ func main() {
 			HostnameNotFoundMessage:          "Web app linked to the hostname you provided does not exist!",
 		},
 		ProxyHost: []config.ProxyHost{
-			{Hostname: "datasource.niromash.me", RedirectTo: "http://85.10.204.125"},
+			{Hostname: "datasource.niromash.me", RedirectTo: "http://85.10.204.125:4005"},
+			{Hostname: "infra.niromash.me", RedirectTo: "http://85.10.204.125:4000"},
+			{Hostname: "git.niromash.me", RedirectTo: "http://85.10.204.125:4010"},
 		},
 	}
 
