@@ -42,7 +42,7 @@ func main() {
 			{Hostname: "datasource.niromash.me", RedirectTo: "http://85.10.204.125:4005"},
 			{Hostname: "infra.niromash.me", RedirectTo: "http://85.10.204.125:4000"},
 			{Hostname: "git.niromash.me", RedirectTo: "http://85.10.204.125:4010"},
-			{Hostname: "stats.niromash.me", RedirectTo: "http://85.10.204.125:3100"},
+			{Hostname: "stats.niromash.me", RedirectTo: "http://85.10.204.125:3200"},
 		},
 	}
 
