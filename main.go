@@ -37,7 +37,7 @@ func main() {
 			HostnameNotFoundMessage:          "Web app linked to the hostname you provided does not exist!",
 		},
 		ProxyHost: []config.ProxyHost{
-			{Hostname: "datasource.niromash.me", RedirectTo: "85.10.204.125"},
+			{Hostname: "datasource.niromash.me", RedirectTo: "http://85.10.204.125"},
 		},
 	}
 
