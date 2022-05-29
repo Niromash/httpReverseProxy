@@ -2,8 +2,8 @@ package main
 
 import (
 	"context"
-	"httpReverseProxy/api"
-	"httpReverseProxy/internal/config"
+	"git.niromash.me/odyssey/reverse-proxy/api"
+	"git.niromash.me/odyssey/reverse-proxy/internal/config"
 	"io/ioutil"
 	"log"
 	"net"

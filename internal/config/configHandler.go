@@ -1,8 +1,8 @@
 package config
 
 import (
+	"git.niromash.me/odyssey/reverse-proxy/api"
 	"github.com/BurntSushi/toml"
-	"httpReverseProxy/api"
 	"log"
 	"os"
 )
