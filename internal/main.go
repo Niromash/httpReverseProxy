@@ -2,8 +2,8 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"git.niromash.me/odyssey/reverse-proxy/api"
-	"git.niromash.me/odyssey/reverse-proxy/internal/config"
 	"io/ioutil"
 	"log"
 	"net"
@@ -31,16 +31,45 @@ func main() {
 		os.Exit(0)
 	}()
 
-	cfgRaw, err := config.HandleConfigFile()
+	atoi, err := strconv.Atoi(os.Getenv("PORT"))
 	if err != nil {
+		log.Fatalln(err)
+	}
+
+	cfg := api.Config{
+		HttpServerOptions: api.HttpServerOptions{
+			Port: atoi,
+		},
+		Preferences: api.Preferences{
+			HostnameNotFoundMessage: "Not found",
+		},
+		ProxyHost: []api.ProxyHost{},
+	}
+
+	proxyHostEnv := os.Getenv("PROXY_HOST")
+	proxyHostMap := make(map[string]string)
+	if err = json.Unmarshal([]byte(proxyHostEnv), &proxyHostMap); err != nil {
+		log.Fatalln(err)
 		return
 	}
 
-	cfg, err := config.Decode(cfgRaw)
-	if err != nil {
-		log.Fatalln("Unable to parse config file: ", err)
-		return
+	for host, target := range proxyHostMap {
+		cfg.ProxyHost = append(cfg.ProxyHost, api.ProxyHost{
+			Hostname:   host,
+			RedirectTo: target,
+		})
 	}
+
+	// cfgRaw, err := config.HandleConfigFile()
+	// if err != nil {
+	// 	return
+	// }
+	//
+	// cfg, err := config.Decode(cfgRaw)
+	// if err != nil {
+	// 	log.Fatalln("Unable to parse config file: ", err)
+	// 	return
+	// }
 
 	for _, host := range cfg.ProxyHost {
 		log.Printf("Redirect %s to %s", host.Hostname, host.RedirectTo)
