@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"git.niromash.me/odyssey/reverse-proxy/api"
+	"git.niromash.me/odyssey/reverse-proxy/utils"
 	"io/ioutil"
 	"log"
 	"net"
@@ -94,24 +95,27 @@ func main() {
 			}
 			proxy := httputil.NewSingleHostReverseProxy(remote)
 
+			// Remove trailing slash
 			wildcardIndex := strings.IndexAny("/*catchall", "*")
 			proxyPath := singleJoiningSlash(remote.Path, r.URL.Path[wildcardIndex:])
 			if strings.HasSuffix(proxyPath, "/") && len(proxyPath) > 1 {
 				proxyPath = proxyPath[:len(proxyPath)-1]
 			}
-			r.URL.Path = proxyPath
 
-			// log.Printf("Redirecting %s to %s", hostname, redirectTo)
-			// r.Header.Set("Cache-control", "no-cache")
-			r.Header.Set("Host", "https://"+proxyHost.Hostname)
+			proxy.Director = func(req *http.Request) {
+				req.URL.Scheme = remote.Scheme
+				req.URL.Host = remote.Host
+				req.Host = remote.Host
+			}
+
+			log.Printf("Redirecting %s to %s", hostname, remote.Host)
+			r.Header.Set("Cache-control", "no-cache")
+			r.Header.Set("Host", utils.IfThenElse(r.TLS == nil, "http://", "https://")+remote.Host)
 			r.Header.Set("Referer", r.Referer())
 			r.Header.Set("X-Forwarded-Host", proxyHost.Hostname)
-			r.Header.Set("X-Forwarded-Proto", "https")
-			r.Header.Set("X-Forwarded-Port", "443")
+			r.Header.Set("X-Forwarded-Proto", r.Proto)
+			r.Header.Set("X-Forwarded-Port", strconv.Itoa(cfg.HttpServerOptions.Port))
 			r.Header.Add("X-Origin-Host", remote.Host)
-			r.URL.Scheme = "https"
-			r.URL.Host = remote.Host
-			r.Host = remote.Host
 
 			if _, err = net.LookupIP(remote.Hostname()); err != nil {
 				log.Println("Target cannot be reached:", err.Error())
