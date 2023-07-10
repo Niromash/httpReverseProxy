@@ -2,8 +2,8 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"git.niromash.me/odyssey/reverse-proxy/api"
+	"git.niromash.me/odyssey/reverse-proxy/config"
 	"git.niromash.me/odyssey/reverse-proxy/utils"
 	"io/ioutil"
 	"log"
@@ -32,53 +32,55 @@ func main() {
 		os.Exit(0)
 	}()
 
-	atoi, err := strconv.Atoi(os.Getenv("PORT"))
+	//atoi, err := strconv.Atoi(os.Getenv("PORT"))
+	//if err != nil {
+	//	log.Fatalln(err)
+	//}
+
+	//cfg := api.Config{
+	//	HttpServerOptions: api.HttpServerOptions{
+	//		Port: atoi,
+	//	},
+	//	Preferences: api.Preferences{
+	//		HostnameNotFoundMessage: "Not found",
+	//	},
+	//	ProxyHost: []api.ProxyHost{
+	//		{
+	//			Hostname:   "localhost",
+	//			RedirectTo: "https://www.twitch.tv",
+	//			PathType:   api.PathTypePrefix,
+	//			Path:       "/directory",
+	//		},
+	//		{
+	//			Hostname:   "localhost",
+	//			RedirectTo: "https://blog.filador.fr",
+	//			//RedirectTo: "https://emeralds-hub.com",
+	//			PathType: api.PathTypePrefix,
+	//			Path:     "/",
+	//		},
+	//	},
+	//}
+
+	cfgRaw, err := config.HandleConfigFile()
 	if err != nil {
-		log.Fatalln(err)
-	}
-
-	cfg := api.Config{
-		HttpServerOptions: api.HttpServerOptions{
-			Port: atoi,
-		},
-		Preferences: api.Preferences{
-			HostnameNotFoundMessage: "Not found",
-		},
-		ProxyHost: []api.ProxyHost{},
-	}
-
-	proxyHostEnv := os.Getenv("PROXY_HOST")
-	proxyHostMap := make(map[string]string)
-	if err = json.Unmarshal([]byte(proxyHostEnv), &proxyHostMap); err != nil {
-		log.Fatalln(err)
 		return
 	}
 
-	for host, target := range proxyHostMap {
-		cfg.ProxyHost = append(cfg.ProxyHost, api.ProxyHost{
-			Hostname:   host,
-			RedirectTo: target,
-		})
+	cfg, err := config.Decode(cfgRaw)
+	if err != nil {
+		log.Fatalln("Unable to parse config file: ", err)
+		return
 	}
-
-	// cfgRaw, err := config.HandleConfigFile()
-	// if err != nil {
-	// 	return
-	// }
-	//
-	// cfg, err := config.Decode(cfgRaw)
-	// if err != nil {
-	// 	log.Fatalln("Unable to parse config file: ", err)
-	// 	return
-	// }
 
 	for _, host := range cfg.ProxyHost {
 		log.Printf("Redirect %s to %s", host.Hostname, host.RedirectTo)
 	}
 
-	getProxyHostFromHostname := func(hostname string) *api.ProxyHost {
+	getProxyHostFromHostnameAndPath := func(hostname string, path string) *api.ProxyHost {
 		for _, host := range cfg.ProxyHost {
-			if strings.EqualFold(host.Hostname, hostname) {
+			if strings.EqualFold(host.Hostname, hostname) &&
+				(host.PathType == api.PathTypePrefix && strings.HasPrefix(path, host.Path)) ||
+				(host.PathType == api.PathTypeExact && path == host.Path) {
 				return &host
 			}
 		}
@@ -87,7 +89,7 @@ func main() {
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		hostname := strings.Split(r.Host, ":")[0]
-		proxyHost := getProxyHostFromHostname(hostname)
+		proxyHost := getProxyHostFromHostnameAndPath(hostname, r.URL.Path)
 		if proxyHost != nil {
 			remote, err := url.Parse(proxyHost.RedirectTo)
 			if err != nil {
@@ -95,14 +97,15 @@ func main() {
 			}
 			proxy := httputil.NewSingleHostReverseProxy(remote)
 
-			// Remove trailing slash
-			wildcardIndex := strings.IndexAny("/*catchall", "*")
-			proxyPath := singleJoiningSlash(remote.Path, r.URL.Path[wildcardIndex:])
-			if strings.HasSuffix(proxyPath, "/") && len(proxyPath) > 1 {
-				proxyPath = proxyPath[:len(proxyPath)-1]
-			}
-
 			proxy.Director = func(req *http.Request) {
+				// Remove trailing slash
+				//wildcardIndex := strings.IndexAny("/*catchall", "*")
+				//proxyPath := singleJoiningSlash(remote.Path, r.URL.Path[wildcardIndex:])
+				//if strings.HasSuffix(proxyPath, "/") && len(proxyPath) > 1 {
+				//	proxyPath = proxyPath[:len(proxyPath)-1]
+				//}
+				//fmt.Println(proxyPath)
+
 				req.URL.Scheme = remote.Scheme
 				req.URL.Host = remote.Host
 				req.Host = remote.Host

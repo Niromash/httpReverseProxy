@@ -16,7 +16,16 @@ type Preferences struct {
 	HostnameNotFoundMessage          string `toml:"hostnameNotFoundMessage"`
 }
 
+type PathType string
+
+const (
+	PathTypePrefix PathType = "Prefix"
+	PathTypeExact  PathType = "Exact"
+)
+
 type ProxyHost struct {
-	Hostname   string `toml:"hostname"`
-	RedirectTo string `toml:"redirectTo"`
+	Hostname   string   `toml:"hostname"`
+	RedirectTo string   `toml:"redirectTo"`
+	PathType   PathType `toml:"pathType"` // Prefix or Exact
+	Path       string   `toml:"path"`     // Path to match for the redirect
 }
