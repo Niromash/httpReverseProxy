@@ -10,8 +10,12 @@ hostnameNotFoundMessage = "Web app linked to the hostname you provided does not 
 
 [[proxyHost]]
 hostname = "localhost"
-redirectTo = "https://emeralds-hub.com"
+redirectTo = "https://www.twitch.tv"
+pathType = "Prefix"
+path = "/directory"
 
 [[proxyHost]]
-hostname = "test"
-redirectTo = "https://bastionmc.fr"
+hostname = "localhost"
+redirectTo = "https://google.com"
+pathType = "Prefix"
+path = "/"
