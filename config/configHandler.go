@@ -20,10 +20,14 @@ hostnameNotFoundMessage = "Web app linked to the hostname you provided does not 
 [[proxyHost]]
 hostname = "yourproject.com"
 redirectTo = "http://web_app:3000"
+pathType = "Prefix"
+path = "/"
 
 [[proxyHost]]
 hostname = "api.yourproject.com"
 redirectTo = "http://api_app:3000"
+pathType = "Prefix"
+path = "/"
 `
 
 func HandleConfigFile() ([]byte, error) {
